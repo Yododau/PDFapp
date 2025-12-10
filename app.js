@@ -29,6 +29,7 @@ const imageSourceGalleryBtn = document.getElementById("image-source-gallery");
 const imageSourceCameraBtn  = document.getElementById("image-source-camera");
 const imageSourceCancelBtn  = document.getElementById("image-source-cancel");
 
+
 // 選択されたファイルを現在の画像ブロックに反映
 function applyFileToCurrentImageBlock(file) {
   if (!file || !currentImageBlock) return;
@@ -103,6 +104,57 @@ const textSaveBtn = document.getElementById("text-save");
 
 // 今どのテキストブロックを編集しているか
 let currentTextBlock = null;
+
+// ================== iPhone キーボード対策 ==================
+
+// Các input sẽ làm hiện bàn phím
+const textInputsForKeyboard = [
+  inputGcode,
+  inputNyukokubi,
+  inputKaisha,
+  inputNamae,
+  fileNameInput
+];
+
+function keyboardFocusHandler(target) {
+  // Báo cho CSS biết đang có keyboard
+  document.body.classList.add("keyboard-up");
+
+  // Nếu input nằm trong modal text → đẩy modal lên trên
+  if (textModal && target && textModal.contains(target)) {
+    textModal.classList.add("keyboard-up");
+  } else if (textModal) {
+    textModal.classList.remove("keyboard-up");
+  }
+}
+
+function keyboardBlurHandler() {
+  // Chờ một chút để xem có chuyển focus sang input khác không
+  setTimeout(() => {
+    const active = document.activeElement;
+    const isInput =
+      active &&
+      (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
+
+    // Nếu không còn input nào đang focus → tắt trạng thái keyboard-up
+    if (!isInput) {
+      document.body.classList.remove("keyboard-up");
+      if (textModal) {
+        textModal.classList.remove("keyboard-up");
+      }
+    }
+  }, 150);
+}
+
+// Gắn sự kiện focus/blur cho từng input
+textInputsForKeyboard.forEach((el) => {
+  if (!el) return;
+  el.addEventListener("focus", (event) => {
+    keyboardFocusHandler(event.target);
+  });
+  el.addEventListener("blur", keyboardBlurHandler);
+});
+
 
 // ================== レイアウト構築共通関数 ==================
 
