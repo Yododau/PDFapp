@@ -913,7 +913,7 @@ body.theme-night #editor-screen.phone-container {
   width: 390px;
   margin: 0 auto;
   min-height: 100vh;
-  padding: 10px 12px 21px;
+  padding: 10px 12px 12px;
   display: flex;
   flex-direction: column;
 
