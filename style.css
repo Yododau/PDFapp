@@ -961,6 +961,13 @@ body.theme-night #editor-screen.phone-container {
   box-shadow: none;
 }
 
+/* Khi bàn phím iPhone bật → cho phép trang tự scroll, không ép full-height */
+body.theme-night.keyboard-up #editor-screen.phone-container {
+  min-height: auto;
+  height: auto;
+}
+
+
 /* 3. Top bar */
 body.theme-night #toolbar {
   width: 100%;
@@ -1119,7 +1126,7 @@ body.theme-night.pdf-mode .block {
 /* 2) Tăng size icon bên trong */
 #back-button .icon,
 #export-pdf .icon {
-  font-size: 20px;          /* nếu icon là text / font */
+  font-size: 28px;          /* nếu icon là text / font */
   line-height: 1;
   display: flex;
   align-items: center;
@@ -1129,8 +1136,8 @@ body.theme-night.pdf-mode .block {
 /* Nếu icon là SVG thì phóng to luôn SVG */
 #back-button .icon svg,
 #export-pdf .icon svg {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
 }
 
 /* 3) Đổi màu icon PDF sang đỏ */
@@ -1566,6 +1573,28 @@ body.theme-night.pdf-mode #a4-page {
   }
 }
 
+/* ============ Modal Buttons – phóng to icon cho cân đối ============ */
+.text-modal-icon-btn svg {
+  width: 60px;
+  height: 60px;
+}
 
+.text-modal-icon-btn {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%; /* đẹp hơn, đồng bộ icon tròn */
+}
 
+/* Floppy icon SAVE – xám đậm, vẫn giữ border xanh */
+#text-edit-modal #text-save svg {
+  color: #475569 !important; /* xám đậm – Slate600 */
+}
 
+/* Viền xanh chỉ để NHẤN chức năng save */
+#text-edit-modal #text-save {
+  background: #ffffff;                         /* nền trắng */
+  border-color: rgba(34,197,94,0.85);          /* viền xanh lá nhạt */
+}
