@@ -246,16 +246,27 @@ function createBlock(index, type, placeholder) {
 
 
 // ================== 画像処理 ==================
-// Click outside A4 → clear block highlight
-if (editorScreen && a4Page) {
+// Click vào bất cứ đâu KHÔNG phải block → clear block highlight
+if (editorScreen) {
   editorScreen.addEventListener("click", (e) => {
-    // Nếu click nằm TRONG tờ A4 thì không làm gì
-    if (a4Page.contains(e.target)) return;
+    // 1) Nếu click vào block (hoặc phần tử con bên trong block) → không clear
+    if (e.target.closest(".block")) return;
 
-    // Click toolbar / bottom-bar / wallpaper → clear viền xanh
+    // 2) Nếu đang mở text modal và click vào bên trong panel modal → không clear
+    if (
+      typeof textModal !== "undefined" &&
+      textModal &&
+      !textModal.classList.contains("hidden") &&
+      textModal.contains(e.target)
+    ) {
+      return;
+    }
+
+    // 3) Còn lại (top bar, bottom bar, khoảng trống trong A4, wallpaper, v.v.) → clear highlight
     clearActiveBlockHighlight();
   });
 }
+
 
 // 画像ブロッククリック → iPhone標準のファイル選択ポップアップを直接開く
 function handleImageBlockClick(block) {
