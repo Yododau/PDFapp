@@ -421,19 +421,6 @@ body.theme-night.pdf-mode #a4-inner.layout-2blocks {
   transition: opacity 0.22s ease-out;
 }
 
-/* Khi bàn phím bật → đẩy modal lên phía trên một chút */
-#text-edit-modal.keyboard-up {
-  align-items: flex-start;
-  padding-top: 24px;          /* chỉnh số này để modal cao/thấp tùy ý */
-}
-
-/* Đề phòng trường hợp cao quá → cho phép cuộn trong panel */
-#text-edit-modal.keyboard-up .modal-content {
-  max-height: calc(100% - 80px);
-  overflow-y: auto;
-}
-
-
 #text-edit-modal.hidden {
   display: none;
 }
@@ -1608,5 +1595,6 @@ body.theme-night.pdf-mode #a4-page {
   background: #ffffff;                         /* nền trắng */
   border-color: rgba(34,197,94,0.85);          /* viền xanh lá nhạt */
 }
+
 
 
