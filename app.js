@@ -556,23 +556,27 @@ exportButton.addEventListener("click", () => {
     return;
   }
 
-  const element = document.getElementById("a4-page");
+  // 👉 Chỉ chụp đúng tờ A4, không lấy cả wrapper
+  const element = a4Page;
   const fileName = (fileNameInput.value || "document").trim() || "document";
 
   const opt = {
-    margin: 0,
-    filename: fileName + ".pdf",
-    image: { type: "jpeg", quality: 0.98 },
+    // 0mm margin → full-bleed trong A4 của jsPDF
+    margin:       0,
+    filename:     fileName + ".pdf",
+    image:        { type: "jpeg", quality: 0.98 },
     html2canvas: {
-      scale: 2,
+      // scale cao hơn = DPI mịn hơn khi in
+      scale: 3,
       useCORS: true
     },
     jsPDF: {
-      unit: "mm",
-      format: "a4",
+      unit:        "mm",
+      format:      "a4",
       orientation: "portrait"
     }
   };
+
 
   // 🔹 BẬT chế độ PDF: bỏ border cho .block
   document.body.classList.add("pdf-mode");
