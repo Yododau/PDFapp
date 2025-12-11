@@ -1162,6 +1162,10 @@ body.theme-night.pdf-mode .block.is-selected {
 body.theme-night.pdf-mode .block[data-type="image"].placeholder {
   color: transparent !important;
 }
+/* Khi export PDF: ẩn luôn chữ「タップしてテキスト入力」 */
+body.theme-night.pdf-mode .block[data-type="text"].placeholder {
+  color: transparent !important;
+}
 
 /* ============================
    🩵 Tappable animation – iOS style
