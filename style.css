@@ -200,23 +200,23 @@ select {
 #a4-inner.layout-3blocks {
   display: grid;
   grid-template-rows:
-    9fr   /* spacer-top */
+    5fr   /* spacer-top */
     33fr  /* block-1 (画像1) */
     1fr   /* spacer-mid-1 */
     33fr  /* block-2 (画像2) */
     1fr   /* spacer-mid-2 */
     17fr  /* block-3 (テキスト) */
-    6fr;  /* spacer-bottom */
+    10fr;  /* spacer-bottom */
 }
 body.theme-night.pdf-mode #a4-inner.layout-3blocks {
   grid-template-rows:
-    12fr   /* spacer-top */
+    8fr   /* spacer-top */
     33fr  /* block-1 (画像1) */
     1fr   /* spacer-mid-1 */
     33fr  /* block-2 (画像2) */
     1fr   /* spacer-mid-2 */
     19fr  /* block-3 (テキスト) */
-    1fr;  /* spacer-bottom */
+    5fr;  /* spacer-bottom */
 }
 
 /* ================== レイアウト：キャッシュカード（1画像+テキスト） ================== */
@@ -225,21 +225,21 @@ body.theme-night.pdf-mode #a4-inner.layout-3blocks {
 #a4-inner.layout-2blocks {
   display: grid;
   grid-template-rows:
-    10fr   /* spacer-top */
+    7fr   /* spacer-top */
     17fr  /* spacer-mid-1（画像上の余白） */
     33fr  /* block-1 (画像) */
     1fr   /* spacer-mid-2（画像とテキストの間） */
     17fr  /* block-2 (テキスト) */
-    22fr; /* spacer-bottom */
+    25fr; /* spacer-bottom */
 }
 body.theme-night.pdf-mode #a4-inner.layout-2blocks {
   grid-template-rows:
-    17fr  /* spacer-top: lề trên */
+    13fr  /* spacer-top: lề trên */
     15fr  /* spacer trên ảnh */
     33r  /* block-1 (画像) – ảnh to hơn 1 chút */
     2fr   /* khoảng giữa ảnh và text */
     18fr  /* block-2 (テキスト) – text cao hơn */
-    15fr; /* spacer-bottom: lề dưới, nhỏ hơn trước nhiều */
+    19fr; /* spacer-bottom: lề dưới, nhỏ hơn trước nhiều */
 }
 /* ================== 画像ブロック ================== */
 
@@ -1143,7 +1143,7 @@ body.theme-night.pdf-mode .block.is-selected {
   border: none;             /* bỏ viền */
   background: transparent;  /* bỏ nền trắng / tím */
   box-shadow: none;         /* nếu có bóng thì bỏ luôn */
-  min-width: 32px;          /* nút vuông gọn */
+  min-width: 55px;          /* nút vuông gọn */
   height: 32px;
   padding: 0;               /* không thêm padding thừa */
 }
@@ -1654,4 +1654,18 @@ body.pdf-mode #a4-wrapper {
   height: 100vh !important;
   margin: 0 !important;
   padding: 0 !important;
+}
+
+/* ⭐ Tăng chiều ngang cho Clear và Hozon để dễ touch hơn */
+#clear-button.icon-only,
+#export-pdf.icon-only {
+  min-width: 55px !important;   /* tăng từ 44px → 58px (+32%) */
+  width: 55px !important;
+}
+
+/* ⭐ Icon tự scale lớn, nhìn cân đối hơn */
+#clear-button.icon-only svg,
+#export-pdf.icon-only svg {
+  width: 22px !important;
+  height: 22px !important;
 }

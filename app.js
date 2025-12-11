@@ -567,11 +567,11 @@ exportButton.addEventListener("click", () => {
     }
 
     h2c(element, {
-      scale: 3,
+      scale: 2.5,
       useCORS: true,
     })
       .then((canvas) => {
-        const imgData = canvas.toDataURL("image/png");
+        const imgData = canvas.toDataURL("image/jpeg", 0.9); 
 
         // Tạo PDF A4 1 trang
         const pdf = new JsPDF({
