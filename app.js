@@ -556,13 +556,13 @@ exportButton.addEventListener("click", () => {
     return;
   }
 
-  const element = a4Wrapper;
+  const element = document.getElementById("a4-page");
   const fileName = (fileNameInput.value || "document").trim() || "document";
 
   const opt = {
     margin: 0,
     filename: fileName + ".pdf",
-    image: { type: "jpeg", quality: 0.95 },
+    image: { type: "jpeg", quality: 0.98 },
     html2canvas: {
       scale: 2,
       useCORS: true
