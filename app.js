@@ -121,54 +121,6 @@ const textSaveBtn = document.getElementById("text-save");
 // 今どのテキストブロックを編集しているか
 let currentTextBlock = null;
 
-// ================== iPhone キーボード対策 ==================
-
-// Các input sẽ làm hiện bàn phím
-const textInputsForKeyboard = [
-  inputGcode,
-  inputNyukokubi,
-  inputKaisha,
-  inputNamae,
-  fileNameInput
-];
-
-function keyboardFocusHandler(target) {
-  // Báo cho CSS biết đang có keyboard (giữ lại nếu sau này muốn dùng class này)
-  document.body.classList.add("keyboard-up");
-
-  // ❌ Không chạm tới textModal nữa
-  // → Modal sẽ không bị thêm class keyboard-up,
-  //   nên behave giống như filename textbar.
-}
-
-function keyboardBlurHandler() {
-  // Chờ một chút để xem có chuyển focus sang input khác không
-  setTimeout(() => {
-    const active = document.activeElement;
-    const isInput =
-      active &&
-      (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
-
-    // Nếu không còn input nào đang focus → tắt trạng thái keyboard-up
-    if (!isInput) {
-      document.body.classList.remove("keyboard-up");
-      if (textModal) {
-        textModal.classList.remove("keyboard-up");
-      }
-    }
-  }, 150);
-}
-
-// Gắn sự kiện focus/blur cho từng input
-textInputsForKeyboard.forEach((el) => {
-  if (!el) return;
-  el.addEventListener("focus", (event) => {
-    keyboardFocusHandler(event.target);
-  });
-  el.addEventListener("blur", keyboardBlurHandler);
-});
-
-
 // ================== レイアウト構築共通関数 ==================
 
 function buildLayoutForCurrentTemplate() {

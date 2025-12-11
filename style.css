@@ -966,12 +966,6 @@ body.theme-night #editor-screen.phone-container {
   box-shadow: none;
 }
 
-/* Khi bàn phím iPhone bật → cho phép trang tự scroll, không ép full-height */
-body.theme-night.keyboard-up #editor-screen.phone-container {
-  min-height: auto;
-  height: auto;
-}
-
 
 /* 3. Top bar */
 body.theme-night #toolbar {
