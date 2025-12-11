@@ -547,63 +547,29 @@ function clearAllData() {
 // ================== PDF保存 ==================
 
 exportButton.addEventListener("click", () => {
-  // ① Xác nhận trước khi xuất PDF (KHÔNG nói gì về reset nữa)
-  const ok = confirm(
-    "PDFを保存しますか？\n（アプリ内の入力内容はそのまま残ります）"
-  );
-  if (!ok) {
-    // Người dùng bấm Cancel / No → không làm gì, dữ liệu giữ nguyên
-    return;
-  }
+  const ok = confirm("PDFを保存しますか？");
+  if (!ok) return;
 
-  // 👉 Chỉ chụp đúng tờ A4, không lấy cả wrapper
+  document.body.classList.add("pdf-mode");   // ⭐ BẬT CHẾ ĐỘ PDF
+
   const element = a4Page;
-  const fileName = (fileNameInput.value || "document").trim() || "document";
+  const fileName = fileNameInput.value || "document";
 
   const opt = {
-    // 0mm margin → full-bleed trong A4 của jsPDF
-    margin:       0,
-    filename:     fileName + ".pdf",
-    image:        { type: "jpeg", quality: 0.98 },
-    html2canvas: {
-      // scale cao hơn = DPI mịn hơn khi in
-      scale: 3,
-      useCORS: true
-    },
-    jsPDF: {
-      unit:        "mm",
-      format:      "a4",
-      orientation: "portrait"
-    }
+    margin: 0,
+    filename: fileName + ".pdf",
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
   };
 
-
-  // 🔹 BẬT chế độ PDF: bỏ border cho .block
-  document.body.classList.add("pdf-mode");
-
-  html2pdf()
-    .set(opt)
-    .from(element)
-    .save()
-    .then(() => {
-      // 🔹 TẮT chế độ PDF sau khi xuất xong
-      document.body.classList.remove("pdf-mode");
-
-      // Thông báo nhẹ cho user
-      alert(
-        "PDFの保存が完了しました。\n\n" +
-          "ファイルは「このiPhone内（On My iPhone）」から確認できます。\n" +
-          "アプリ内の入力内容はそのまま残っています。"
-      );
-
-      // ❌ KHÔNG gọi clearAllData() nữa → dữ liệu được giữ nguyên
-    })
-    .catch((err) => {
-      console.error("PDF export error:", err);
-      document.body.classList.remove("pdf-mode");
-      alert("PDFの保存中にエラーが発生しました。もう一度お試しください。");
-    });
+  html2pdf().set(opt).from(element).save().then(() => {
+    setTimeout(() => {
+      document.body.classList.remove("pdf-mode");  // ⭐ TẮT CHẾ ĐỘ PDF
+    }, 300);
+  });
 });
+
 
 
 

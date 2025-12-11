@@ -1614,5 +1614,30 @@ body.theme-night.pdf-mode #a4-page {
   border-color: rgba(34,197,94,0.85);          /* viền xanh lá nhạt */
 }
 
+/* Ẩn toàn bộ UI ngoài tờ A4 khi export PDF */
+body.pdf-mode #toolbar,
+body.pdf-mode #bottom-bar,
+body.pdf-mode #text-edit-modal,
+body.pdf-mode #image-source-modal {
+  display: none !important;
+}
 
+body.pdf-mode #editor-screen {
+  padding: 0 !important;
+  margin: 0 !important;
+}
 
+body.pdf-mode {
+  overflow: hidden !important;
+  background: #ffffff !important;
+}
+
+/* A4 luôn nằm chính giữa */
+body.pdf-mode #a4-wrapper {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
