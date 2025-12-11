@@ -894,6 +894,20 @@ body.theme-night #toolbar button:active {
     transform-origin: top center;
   }
 }
+/* Khi xuất PDF trên iPhone: ưu tiên đúng tỉ lệ A4, không phụ thuộc chiều cao màn hình */
+@media (max-width: 500px) {
+  /* Wrapper: cho phép phần A4 cao hơn màn hình, để html2canvas chụp đủ */
+  body.theme-night.pdf-mode #a4-wrapper {
+    align-items: flex-start;  /* A4 dính lên trên 1 chút cũng không sao */
+    overflow: visible;        /* cho phép tràn, để chụp đủ chiều cao */
+  }
+
+  /* A4 page: bỏ height:100% để aspect-ratio hoạt động đúng */
+  body.theme-night.pdf-mode #a4-page {
+    height: auto;
+    max-height: none;
+  }
+}
 
 
 /* ================== スマホ表示用の調整 ================== */
