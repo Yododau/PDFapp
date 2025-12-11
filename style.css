@@ -41,10 +41,20 @@ body {
   color: #333;
 }
 
-/* リンクなどを選択しても青枠が出にくいように */
 button,
-input {
+input,
+textarea,
+select {
   font-family: inherit;
+}
+
+/* 🚫 Ngăn Safari iPhone auto-zoom khi focus input */
+@supports (-webkit-touch-callout: none) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important; /* >=16px thì Safari không zoom */
+  }
 }
 
 
@@ -1598,3 +1608,4 @@ body.theme-night.pdf-mode #a4-page {
   background: #ffffff;                         /* nền trắng */
   border-color: rgba(34,197,94,0.85);          /* viền xanh lá nhạt */
 }
+
