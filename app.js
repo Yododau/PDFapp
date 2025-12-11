@@ -117,15 +117,12 @@ const textInputsForKeyboard = [
 ];
 
 function keyboardFocusHandler(target) {
-  // Báo cho CSS biết đang có keyboard
+  // Báo cho CSS biết đang có keyboard (giữ lại nếu sau này muốn dùng class này)
   document.body.classList.add("keyboard-up");
 
-  // Nếu input nằm trong modal text → đẩy modal lên trên
-  if (textModal && target && textModal.contains(target)) {
-    textModal.classList.add("keyboard-up");
-  } else if (textModal) {
-    textModal.classList.remove("keyboard-up");
-  }
+  // ❌ Không chạm tới textModal nữa
+  // → Modal sẽ không bị thêm class keyboard-up,
+  //   nên behave giống như filename textbar.
 }
 
 function keyboardBlurHandler() {
@@ -644,3 +641,4 @@ window.addEventListener("DOMContentLoaded", () => {
     fileNameInput.value = "";
   }
 });
+
