@@ -1674,3 +1674,91 @@ body.pdf-mode #a4-wrapper {
   height: 22px !important;
 }
 
+/* ===== Crop Modal ===== */
+.crop-modal.hidden { display: none; }
+
+.crop-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.crop-panel{
+  width: 100%;
+  max-width: 520px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(148,163,184,0.55);
+  box-shadow: 0 18px 40px rgba(15,23,42,0.35);
+  padding: 14px 14px 12px;
+}
+
+.crop-title{
+  text-align: center;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.crop-stage{
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;      /* sẽ được JS chỉnh theo tỉ lệ block */
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0b1220;
+}
+
+#crop-canvas{
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;       /* để kéo/zoom mượt trên iPhone */
+}
+
+.crop-frame{
+  position: absolute;
+  inset: 8px;
+  border: 2px solid rgba(255,255,255,0.95);
+  border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.25);
+  pointer-events: none;
+}
+
+.crop-controls{
+  margin-top: 10px;
+}
+
+#crop-zoom{
+  width: 100%;
+}
+
+.crop-actions{
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.crop-btn{
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.6);
+  background: #ffffff;
+  color: #111827;
+  font-weight: 600;
+}
+
+.crop-primary{
+  border-color: rgba(34,197,94,0.9);
+  color: #0f172a;
+}

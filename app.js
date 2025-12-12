@@ -94,10 +94,234 @@ const imageSourceGalleryBtn = document.getElementById("image-source-gallery");
 const imageSourceCameraBtn  = document.getElementById("image-source-camera");
 const imageSourceCancelBtn  = document.getElementById("image-source-cancel");
 
+// ===== Cropper elements =====
+const cropModal  = document.getElementById("crop-modal");
+const cropCanvas = document.getElementById("crop-canvas");
+const cropZoom   = document.getElementById("crop-zoom");
+const cropCancel = document.getElementById("crop-cancel");
+const cropApply  = document.getElementById("crop-apply");
+
+let cropImg = null;           // HTMLImageElement
+let cropBlock = null;         // block đang crop
+let cropAspect = 1;           // tỉ lệ khung crop = tỉ lệ block
+let cropScale = 1;            // zoom
+let cropMinScale = 1;
+let cropMaxScale = 3;
+let cropOffsetX = 0;          // pan
+let cropOffsetY = 0;
+
+let isDragging = false;
+let lastX = 0, lastY = 0;
+
+function openCropper(file, block) {
+  if (!file || !block || !cropModal) return;
+
+  cropBlock = block;
+
+  // lấy tỉ lệ block thật (để crop “đúng form”)
+  const w = block.clientWidth || 1;
+  const h = block.clientHeight || 1;
+  cropAspect = w / h;
+
+  // chỉnh stage theo tỉ lệ
+  const stage = cropCanvas.parentElement; // .crop-stage
+  stage.style.aspectRatio = `${cropAspect}`;
+
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    cropImg = img;
+
+    // reset trạng thái
+    cropScale = 1;
+    cropOffsetX = 0;
+    cropOffsetY = 0;
+
+    // tính minScale để ảnh luôn phủ kín khung crop
+    const { cw, ch } = getCropCanvasSize();
+    const sx = cw / img.naturalWidth;
+    const sy = ch / img.naturalHeight;
+    cropMinScale = Math.max(sx, sy);
+    cropMaxScale = cropMinScale * 3; // cho zoom tối đa ~3 lần
+    cropScale = cropMinScale;
+
+    cropZoom.min = String(cropMinScale);
+    cropZoom.max = String(cropMaxScale);
+    cropZoom.value = String(cropScale);
+
+    // set canvas size theo pixel để nét
+    resizeCropCanvas();
+    drawCrop();
+
+    cropModal.classList.remove("hidden");
+  };
+  img.src = url;
+}
+
+function closeCropper() {
+  if (!cropModal) return;
+  cropModal.classList.add("hidden");
+  cropImg = null;
+  cropBlock = null;
+  isDragging = false;
+}
+
+function getCropCanvasSize() {
+  const rect = cropCanvas.getBoundingClientRect();
+  // fallback nếu chưa render
+  return { cw: Math.max(1, rect.width), ch: Math.max(1, rect.height) };
+}
+
+function resizeCropCanvas() {
+  const rect = cropCanvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  cropCanvas.width  = Math.max(1, Math.round(rect.width  * dpr));
+  cropCanvas.height = Math.max(1, Math.round(rect.height * dpr));
+}
+
+function clampPan() {
+  if (!cropImg) return;
+
+  const cw = cropCanvas.width;
+  const ch = cropCanvas.height;
+
+  const drawW = cropImg.naturalWidth * cropScale * (cropCanvas.width / (cropCanvas.getBoundingClientRect().width * (window.devicePixelRatio||1)));
+  const drawH = cropImg.naturalHeight * cropScale * (cropCanvas.height / (cropCanvas.getBoundingClientRect().height * (window.devicePixelRatio||1)));
+
+  // center-based pan clamp
+  const maxX = Math.max(0, (drawW - cw) / 2);
+  const maxY = Math.max(0, (drawH - ch) / 2);
+
+  cropOffsetX = Math.min(maxX, Math.max(-maxX, cropOffsetX));
+  cropOffsetY = Math.min(maxY, Math.max(-maxY, cropOffsetY));
+}
+
+function drawCrop() {
+  if (!cropImg) return;
+
+  const ctx = cropCanvas.getContext("2d");
+  if (!ctx) return;
+
+  // clear
+  ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+
+  // scale logic: map to canvas pixel space
+  const cw = cropCanvas.width;
+  const ch = cropCanvas.height;
+
+  // base cover scale in canvas-px terms
+  const sx = cw / cropImg.naturalWidth;
+  const sy = ch / cropImg.naturalHeight;
+  const cover = Math.max(sx, sy);
+
+  // cropScale là absolute scale (đã tính minScale), nhưng ta quy về cover baseline
+  const rel = cropScale / cropMinScale;
+  const finalScale = cover * rel;
+
+  const drawW = cropImg.naturalWidth * finalScale;
+  const drawH = cropImg.naturalHeight * finalScale;
+
+  clampPan();
+
+  const x = (cw - drawW) / 2 + cropOffsetX;
+  const y = (ch - drawH) / 2 + cropOffsetY;
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(cropImg, x, y, drawW, drawH);
+}
+if (cropZoom) {
+  cropZoom.addEventListener("input", () => {
+    cropScale = parseFloat(cropZoom.value);
+    drawCrop();
+  });
+}
+
+// kéo ảnh (pan) bằng Pointer Events
+if (cropCanvas) {
+  cropCanvas.addEventListener("pointerdown", (e) => {
+    isDragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    cropCanvas.setPointerCapture(e.pointerId);
+  });
+
+  cropCanvas.addEventListener("pointermove", (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+
+    // scale theo dpr để kéo “đúng tay”
+    const dpr = window.devicePixelRatio || 1;
+    cropOffsetX += dx * dpr;
+    cropOffsetY += dy * dpr;
+    drawCrop();
+  });
+
+  cropCanvas.addEventListener("pointerup", () => {
+    isDragging = false;
+  });
+  cropCanvas.addEventListener("pointercancel", () => {
+    isDragging = false;
+  });
+}
+
+// đóng bằng overlay
+if (cropModal) {
+  cropModal.addEventListener("click", (e) => {
+    if (e.target === cropModal) closeCropper();
+  });
+}
+if (cropCancel) cropCancel.addEventListener("click", closeCropper);
+
+// Apply => xuất ảnh đã crop thành Blob rồi gắn vào block + lưu state
+if (cropApply) {
+  cropApply.addEventListener("click", async () => {
+    if (!cropBlock) return;
+
+    // xuất blob từ canvas (ảnh đã “đúng khung”)
+    const blob = await new Promise((resolve) =>
+      cropCanvas.toBlob(resolve, "image/jpeg", 0.95)
+    );
+    if (!blob) return;
+
+    // gắn vào block
+    cropBlock.innerHTML = "";
+    cropBlock.classList.remove("placeholder");
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(blob);
+    cropBlock.appendChild(img);
+
+    // nếu bạn đang dùng IndexedDB cho ảnh thì lưu luôn (nếu hàm tồn tại)
+    try {
+      if (typeof saveImageToDB === "function") {
+        const id = cropBlock.dataset.blockId;
+        const key = `${currentTemplate}_image_${id}`;
+        await saveImageToDB(key, blob);
+      }
+    } catch (e) {
+      console.warn("saveImageToDB error:", e);
+    }
+
+    saveAppState();
+    closeCropper();
+  });
+}
+
+// resize => giữ canvas nét
+window.addEventListener("resize", () => {
+  if (!cropModal || cropModal.classList.contains("hidden")) return;
+  resizeCropCanvas();
+  drawCrop();
+});
+
 
 // 選択されたファイルを現在の画像ブロックに反映
 async function applyFileToCurrentImageBlock(file) {
   if (!file || !currentImageBlock) return;
+  openCropper(file, currentImageBlock);
 
   const blockId = currentImageBlock.dataset.blockId;
   const key = `${currentTemplate}_image_${blockId}`;
