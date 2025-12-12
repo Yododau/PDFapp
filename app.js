@@ -601,6 +601,23 @@ function clearAllData() {
   saveAppState();
 }
 
+function isIOSLike() {
+  const ua = navigator.userAgent || "";
+  // iPhone/iPad/iPod, và iPadOS đôi khi báo "Macintosh" nhưng có touch
+  return /iPad|iPhone|iPod/i.test(ua) || (ua.includes("Mac") && "ontouchend" in document);
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 // ================== Shortcuts Save Helper ==================
 async function sendPdfToShortcuts(pdfBlob, fileName) {
   // 1) Blob -> Base64
@@ -647,11 +664,11 @@ exportButton.addEventListener("click", () => {
     }
 
     h2c(element, {
-      scale: 3.5,
+      scale: 4.5,
       useCORS: true,
     })
       .then((canvas) => {
-        const imgData = canvas.toDataURL("image/jpeg", 0.9); 
+        const imgData = canvas.toDataURL("image/jpeg", 1); 
 
         // Tạo PDF A4 1 trang
         const pdf = new JsPDF({
@@ -691,8 +708,12 @@ exportButton.addEventListener("click", () => {
         // bỏ pdf-mode trước khi nhảy sang Shortcuts (để khi quay lại app không bị “ẩn UI”)
         document.body.classList.remove("pdf-mode");
 
-        // gọi shortcuts
-        sendPdfToShortcuts(pdfBlob, fileName);
+        if (isIOSLike()) {
+          sendPdfToShortcuts(pdfBlob, fileName);
+        } else {
+          // ✅ PC/Chrome/Edge/Safari: tải file trực tiếp
+          downloadBlob(pdfBlob, `${fileName}.pdf`);
+        }
         return; // kết thúc luôn
       })
       .catch((err) => {

@@ -174,7 +174,7 @@ select {
 
 .block.placeholder {
   color: #9ca3af;
-  font-size: 13px;
+  font-size: 10px;
 }
 
 /* Block đang được chọn (image / text) */
@@ -322,7 +322,7 @@ body.theme-night.pdf-mode #a4-inner.layout-2blocks {
 /* 中のテキストは左寄せ、等幅フォントで帳票っぽく */
 .info-table {
   padding: 4px 8px;        /* đệm mỏng hơn chút cho gọn */
-  font-size: 8.5pt;        /* hoặc 9pt, tuỳ mắt bạn – nhỏ hơn hiện tại */
+  font-size: 6.5pt;        /* hoặc 9pt, tuỳ mắt bạn – nhỏ hơn hiện tại */
   line-height: 1.3;
   white-space: normal;
   text-align: left;
