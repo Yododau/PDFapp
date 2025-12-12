@@ -153,7 +153,7 @@ select {
   height: 100%;
 
   /* ✅ Thu nhỏ để thẻ ~ +12% so với thẻ gốc khi export ra A4 */
-  transform: scale(0.65);
+  transform: scale(0.7);
   transform-origin: top center;
 }
 
@@ -204,23 +204,23 @@ select {
 #a4-inner.layout-3blocks {
   display: grid;
   grid-template-rows:
-    5fr   /* spacer-top */
-    33fr  /* block-1 (画像1) */
+    20fr   /* spacer-top */
+    30fr  /* block-1 (画像1) */
     1fr   /* spacer-mid-1 */
-    33fr  /* block-2 (画像2) */
+    30fr  /* block-2 (画像2) */
     1fr   /* spacer-mid-2 */
     17fr  /* block-3 (テキスト) */
-    10fr;  /* spacer-bottom */
+    1fr;  /* spacer-bottom */
 }
 body.theme-night.pdf-mode #a4-inner.layout-3blocks {
   grid-template-rows:
-    8fr   /* spacer-top */
-    33fr  /* block-1 (画像1) */
+    20fr   /* spacer-top */
+    30fr  /* block-1 (画像1) */
     1fr   /* spacer-mid-1 */
-    33fr  /* block-2 (画像2) */
+    30fr  /* block-2 (画像2) */
     1fr   /* spacer-mid-2 */
-    19fr  /* block-3 (テキスト) */
-    5fr;  /* spacer-bottom */
+    17fr  /* block-3 (テキスト) */
+    1fr;  /* spacer-bottom */
 }
 
 /* ================== レイアウト：キャッシュカード（1画像+テキスト） ================== */
@@ -229,21 +229,21 @@ body.theme-night.pdf-mode #a4-inner.layout-3blocks {
 #a4-inner.layout-2blocks {
   display: grid;
   grid-template-rows:
-    7fr   /* spacer-top */
+    15fr   /* spacer-top */
     17fr  /* spacer-mid-1（画像上の余白） */
     33fr  /* block-1 (画像) */
     1fr   /* spacer-mid-2（画像とテキストの間） */
     17fr  /* block-2 (テキスト) */
-    25fr; /* spacer-bottom */
+    17fr; /* spacer-bottom */
 }
 body.theme-night.pdf-mode #a4-inner.layout-2blocks {
   grid-template-rows:
-    13fr  /* spacer-top: lề trên */
+    15fr  /* spacer-top: lề trên */
     15fr  /* spacer trên ảnh */
     33r  /* block-1 (画像) – ảnh to hơn 1 chút */
     2fr   /* khoảng giữa ảnh và text */
     18fr  /* block-2 (テキスト) – text cao hơn */
-    19fr; /* spacer-bottom: lề dưới, nhỏ hơn trước nhiều */
+    17fr; /* spacer-bottom: lề dưới, nhỏ hơn trước nhiều */
 }
 /* ================== 画像ブロック ================== */
 

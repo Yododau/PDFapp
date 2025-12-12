@@ -1,5 +1,54 @@
 let currentTemplate = "3blocks";      // デフォルト：在留カード（画像2枚）
 let currentImageBlock = null;
+// ================== IndexedDB (Image Storage) ==================
+const DB_NAME = "pdfAppImageDB";
+const DB_VERSION = 1;
+const STORE_NAME = "images";
+
+function openImageDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveImageToDB(key, blob) {
+  const db = await openImageDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).put(blob, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function loadImageFromDB(key) {
+  const db = await openImageDB();
+  return new Promise((resolve) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const req = tx.objectStore(STORE_NAME).get(key);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => resolve(null);
+  });
+}
+
+async function deleteImageFromDB(key) {
+  const db = await openImageDB();
+  return new Promise((resolve) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).delete(key);
+    tx.oncomplete = () => resolve();
+  });
+}
 
 // ====== localStorage key ======
 const STORAGE_KEY = "nyukokuAppState_v1";
@@ -47,22 +96,25 @@ const imageSourceCancelBtn  = document.getElementById("image-source-cancel");
 
 
 // 選択されたファイルを現在の画像ブロックに反映
-function applyFileToCurrentImageBlock(file) {
+async function applyFileToCurrentImageBlock(file) {
   if (!file || !currentImageBlock) return;
 
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    currentImageBlock.innerHTML = "";
-    currentImageBlock.classList.remove("placeholder");
+  const blockId = currentImageBlock.dataset.blockId;
+  const key = `${currentTemplate}_image_${blockId}`;
 
-    const img = document.createElement("img");
-    img.src = e.target.result;
-    currentImageBlock.appendChild(img);
+  // 1. Hiển thị ảnh ngay (RAM)
+  const img = document.createElement("img");
+  img.src = URL.createObjectURL(file);
 
-    saveAppState();
-  };
+  currentImageBlock.innerHTML = "";
+  currentImageBlock.classList.remove("placeholder");
+  currentImageBlock.appendChild(img);
 
-  reader.readAsDataURL(file);
+  // 2. Lưu Blob vào IndexedDB
+  await saveImageToDB(key, file);
+
+  // 3. Chỉ lưu metadata (KHÔNG lưu base64)
+  saveAppState();
 }
 
 // Photos（フォトライブラリ）を選択
@@ -398,9 +450,8 @@ function saveAppState() {
     };
 
     if (type === "image") {
-      const img = block.querySelector("img");
-      b.imageSrc = img ? img.src : null;
-    } else if (type === "text") {
+      b.hasImage = !!block.querySelector("img");
+    }else if (type === "text") {
       b.gcode = block.dataset.gcode || "";
       b.nyukokubi = block.dataset.nyukokubi || "";
       b.kaisha = block.dataset.kaisha || "";
@@ -458,12 +509,17 @@ function restoreAppState() {
     block.innerHTML = "";
 
     if (type === "image") {
-      if (savedBlock.imageSrc) {
-        const img = document.createElement("img");
-        img.src = savedBlock.imageSrc;
-        block.appendChild(img);
+      if (savedBlock.hasImage) {
+        const key = `${currentTemplate}_image_${id}`;
+        loadImageFromDB(key).then((blob) => {
+          if (blob) {
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(blob);
+            block.appendChild(img);
+            block.classList.remove("placeholder");
+          }
+        });
       } else {
-        // 画像がない場合はプレースホルダーに戻す
         block.classList.add("placeholder");
         block.textContent =
           currentTemplate === "3blocks" && id === "1"
@@ -538,7 +594,10 @@ function clearAllData() {
 
     block.appendChild(span);
   });
-
+  ["1", "2"].forEach((id) => {
+    const key = `${currentTemplate}_image_${id}`;
+    deleteImageFromDB(key);
+  });
   saveAppState();
 }
 
@@ -588,7 +647,7 @@ exportButton.addEventListener("click", () => {
     }
 
     h2c(element, {
-      scale: 2.5,
+      scale: 3.5,
       useCORS: true,
     })
       .then((canvas) => {
