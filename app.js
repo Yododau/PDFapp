@@ -145,15 +145,22 @@ function openCropper(file, block) {
     cropMaxScale = cropMinScale * 3; // cho zoom tối đa ~3 lần
     cropScale = cropMinScale;
 
-    cropZoom.min = String(cropMinScale);
-    cropZoom.max = String(cropMaxScale);
-    cropZoom.value = String(cropScale);
+    if (cropZoom) {
+      cropZoom.min = String(cropMinScale);
+      cropZoom.max = String(cropMaxScale);
+      cropZoom.value = String(cropScale);
+    } else {
+      console.warn("Missing #crop-zoom in HTML");
+    }
 
-    // set canvas size theo pixel để nét
-    resizeCropCanvas();
-    drawCrop();
-
+    // ✅ Hiện modal trước để canvas có kích thước thật
     cropModal.classList.remove("hidden");
+
+    // ✅ Đợi DOM layout xong rồi mới set size canvas + draw
+    requestAnimationFrame(() => {
+      resizeCropCanvas();
+      drawCrop();
+    });
   };
   img.src = url;
 }

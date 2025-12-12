@@ -1721,7 +1721,7 @@ body.pdf-mode #a4-wrapper {
   width: 100%;
   height: 100%;
   display: block;
-  touch-action: none;       /* để kéo/zoom mượt trên iPhone */
+  touch-action: pan-x pan-y; /* ✅ cho phép kéo ảnh, nhưng không chặn slider */
 }
 
 .crop-frame{
@@ -1735,10 +1735,22 @@ body.pdf-mode #a4-wrapper {
 
 .crop-controls{
   margin-top: 10px;
+
+  /* ✅ đảm bảo thanh zoom nằm trên canvas/overlay */
+  position: relative;
+  z-index: 10;
 }
 
 #crop-zoom{
   width: 100%;
+
+  /* ✅ nhận drag chắc chắn */
+  position: relative;
+  z-index: 11;
+  pointer-events: auto;
+
+  /* ✅ kéo ngang mượt trên iPhone */
+  touch-action: pan-x;
 }
 
 .crop-actions{
