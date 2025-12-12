@@ -556,7 +556,7 @@ async function sendPdfToShortcuts(pdfBlob, fileName) {
   const payload = `${fileName}.pdf||${b64}`;
 
   // 3) gọi shortcut (đổi "SavePDF" đúng tên shortcut của bạn)
-  const shortcutName = "SavePDF";
+  const shortcutName = "PDFmaker";
   const url =
     `shortcuts://run-shortcut?name=${encodeURIComponent(shortcutName)}` +
     `&input=${encodeURIComponent(payload)}`;
@@ -690,5 +690,6 @@ window.addEventListener("DOMContentLoaded", () => {
     fileNameInput.value = "";
   }
 });
+
 
 
