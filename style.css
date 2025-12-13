@@ -1728,13 +1728,44 @@ body.pdf-mode #a4-wrapper {
 
 .crop-frame{
   position: absolute;
-  inset: 8px;
-  border: 2px solid rgba(255,255,255,0.95);
-  border-radius: 10px;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.25);
+  inset: 0;
   pointer-events: none;
-}
+  border-radius: 12px;
 
+  /* ❌ bỏ viền trắng cũ */
+  border: none;
+
+  /* ❌ bỏ overlay tối nếu không muốn */
+  box-shadow: none;
+
+  /* ✅ LƯỚI 3x3 */
+  background-image:
+    linear-gradient(to right,
+      rgba(255,255,255,0.35) 1px, transparent 1px),
+    linear-gradient(to right,
+      rgba(255,255,255,0.35) 1px, transparent 1px),
+    linear-gradient(to bottom,
+      rgba(255,255,255,0.35) 1px, transparent 1px),
+    linear-gradient(to bottom,
+      rgba(255,255,255,0.35) 1px, transparent 1px);
+
+  background-size:
+    33.333% 100%,
+    66.666% 100%,
+    100% 33.333%,
+    100% 66.666%;
+
+  background-position:
+    33.333% 0,
+    66.666% 0,
+    0 33.333%,
+    0 66.666%;
+}
+/* Khi đang kéo ảnh / zoom */
+.crop-stage.dragging .crop-frame{
+  opacity: 1;
+}
+.crop-frame { opacity: 0; }
 .crop-controls{
   position: relative;
   z-index: 20;       /* ✅ slider ở lớp trên hẳn */
@@ -1746,12 +1777,21 @@ body.pdf-mode #a4-wrapper {
   position: relative;
   z-index: 21;
   pointer-events: auto;
-  touch-action: pan-x;
+  touch-action: none;   /* ✅ quan trọng: không để Chrome “cướp” drag */
 }
 
 .crop-actions{
   position: relative;
-  z-index: 20;       /* ✅ nút cũng ở lớp trên */
+  z-index: 20;
+  display: flex;
+  justify-content: center;   /* ✅ nút nằm giữa */
+  margin-top: 10px;
+}
+
+.crop-actions .crop-btn{
+  flex: 0 0 auto;            /* ✅ không kéo full 2 bên nữa */
+  min-width: 50px;          /* bạn muốn to/nhỏ thì chỉnh số này */
+  padding: 12px 22px;
 }
 
 .crop-btn{
@@ -1770,6 +1810,61 @@ body.pdf-mode #a4-wrapper {
 }
 body.crop-open #toolbar{
   pointer-events: none;  /* ✅ toolbar không ăn thao tác */
+}
+/* ===== Crop modal button (PRO STYLE) ===== */
+.crop-actions{
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;           /* ↓ giảm chiều cao tổng khu vực */
+}
+
+/* Button chính */
+.crop-actions .crop-btn{
+  min-width: 150px;          /* ✅ tăng chiều rộng */
+  height: 39px;              /* ✅ giảm chiều cao (trước ~50–56px) */
+  padding: 0 28px;
+
+  border-radius: 999px;      /* iOS style pill */
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #f4f6f8 100%
+  );
+
+  border: 1.5px solid #6fcf97;
+  color: #2e7d32;
+
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+/* Hiệu ứng nhấn */
+.crop-actions .crop-btn:active{
+  transform: scale(0.97);
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.18),
+    inset 0 1px 2px rgba(0,0,0,0.12);
+}
+
+/* (tuỳ chọn) hover trên PC */
+@media (hover: hover) {
+  .crop-actions .crop-btn:hover{
+    background: linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #eef7f1 100%
+    );
+  }
 }
 
 body.crop-open #toolbar{ pointer-events: none; }

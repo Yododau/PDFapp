@@ -97,6 +97,7 @@ const imageSourceCancelBtn  = document.getElementById("image-source-cancel");
 // ===== Cropper elements =====
 const cropModal  = document.getElementById("crop-modal");
 const cropCanvas = document.getElementById("crop-canvas");
+const cropStage = cropCanvas?.parentElement; // .crop-stage
 const cropZoom   = document.getElementById("crop-zoom");
 const cropCancel = document.getElementById("crop-cancel");
 const cropApply  = document.getElementById("crop-apply");
@@ -146,9 +147,14 @@ function openCropper(file, block) {
     cropScale = cropMinScale;
 
     if (cropZoom) {
-      cropZoom.min = String(cropMinScale);
-      cropZoom.max = String(cropMaxScale);
-      cropZoom.value = String(cropScale);
+      // ✅ Slider luôn là "zoom factor" 1x ~ 3x
+      cropZoom.min = "1";
+      cropZoom.max = "3";
+      cropZoom.step = "0.01";
+      cropZoom.value = "1";
+
+      // Scale thật dùng để vẽ = minScale * factor
+      cropScale = cropMinScale * parseFloat(cropZoom.value);
     } else {
       console.warn("Missing #crop-zoom in HTML");
     }
@@ -156,6 +162,7 @@ function openCropper(file, block) {
     // ✅ Hiện modal trước để canvas có kích thước thật
     document.body.classList.add("crop-open");
     cropModal.classList.remove("hidden");
+    cropCanvas?.parentElement?.classList.remove("dragging");
 
     // ✅ Đợi DOM layout xong rồi mới set size canvas + draw
     requestAnimationFrame(() => {
@@ -243,41 +250,89 @@ function drawCrop() {
   ctx.drawImage(cropImg, x, y, drawW, drawH);
 }
 if (cropZoom) {
-  const onZoom = () => {
-    cropScale = parseFloat(cropZoom.value);
+  const applyZoom = () => {
+    const factor = parseFloat(cropZoom.value) || 1;
+    cropScale = cropMinScale * factor;
+
+    // 👇 hiện lưới khi zoom
+    cropStage?.classList.add("dragging");
+
+    drawCrop();
+
+    // 👇 ẩn lưới sau 150ms (khi ngừng kéo)
+    clearTimeout(applyZoom._t);
+    applyZoom._t = setTimeout(() => {
+      cropStage?.classList.remove("dragging");
+    }, 150);
+  };
+  cropZoom.addEventListener("input", applyZoom, { passive: true });
+  cropZoom.addEventListener("change", applyZoom, { passive: true });
+}
+
+// ✅ FIX: Chrome device-mode đôi khi không kéo được range native => tự kéo bằng chuột
+if (cropZoom) {
+  let draggingZoom = false;
+
+  const setZoomByClientX = (clientX) => {
+    const rect = cropZoom.getBoundingClientRect();
+    const min = parseFloat(cropZoom.min || "1");
+    const max = parseFloat(cropZoom.max || "3");
+
+    let t = (clientX - rect.left) / rect.width;
+    t = Math.max(0, Math.min(1, t));
+
+    const v = min + (max - min) * t;
+    cropZoom.value = String(v);
+
+    // gọi y như khi kéo slider
+    const factor = parseFloat(cropZoom.value) || 1;
+    cropScale = cropMinScale * factor;
     drawCrop();
   };
 
-  // ✅ realtime khi kéo (quan trọng)
-  cropZoom.addEventListener("input", onZoom, { passive: true });
+  cropZoom.addEventListener("mousedown", (e) => {
+    draggingZoom = true;
+    setZoomByClientX(e.clientX);
+  });
 
-  // ✅ fallback: vài máy chỉ bắn change khi thả tay
-  cropZoom.addEventListener("change", onZoom, { passive: true });
+  window.addEventListener("mousemove", (e) => {
+    if (!draggingZoom) return;
+    setZoomByClientX(e.clientX);
+  });
+
+  window.addEventListener("mouseup", () => {
+    draggingZoom = false;
+  });
 }
 
-// ✅ FIX DỨT ĐIỂM: khi thao tác slider thì khóa canvas để canvas không cướp pointer
+
+
+// ✅ Fix dứt điểm: kéo slider thì canvas không được cướp thao tác
 if (cropZoom && cropCanvas) {
   const lockCanvas = (e) => {
-    // chặn nổi bọt để không kích hoạt listener ở layer khác
+    // ❌ ĐỪNG preventDefault ở đây: sẽ làm slider không kéo được (đặc biệt trên Chrome)
     e.stopPropagation();
-    // khóa canvas nhận pointer (slider luôn kéo được)
-    cropCanvas.style.pointerEvents = "none";
+
+    // nếu đang drag canvas thì hủy
     isDragging = false;
+
+    // tạm thời cho canvas không ăn hit-test khi kéo slider
+    cropCanvas.style.pointerEvents = "none";
   };
 
-  const unlockCanvas = () => {
+  const unlockCanvas = (e) => {
+    e.stopPropagation();
     cropCanvas.style.pointerEvents = "auto";
   };
 
-  // Dùng capture:true để chặn từ sớm
-  ["pointerdown", "mousedown", "touchstart"].forEach((ev) => {
-    cropZoom.addEventListener(ev, lockCanvas, { capture: true, passive: true });
-  });
 
-  ["pointerup", "mouseup", "touchend", "touchcancel", "pointercancel"].forEach((ev) => {
-    cropZoom.addEventListener(ev, unlockCanvas, { capture: true, passive: true });
-  });
+  if (cropZoom) {
+    cropZoom.addEventListener("pointerdown", lockCanvas, { capture: true });
+    cropZoom.addEventListener("pointerup", unlockCanvas, { capture: true });
+    cropZoom.addEventListener("pointercancel", unlockCanvas, { capture: true });
+  }
 }
+
 
 if (cropZoom) {
   cropZoom.addEventListener("pointerdown", () => { isDragging = false; }, { passive: true });
@@ -288,6 +343,7 @@ if (cropZoom) {
 if (cropCanvas) {
   cropCanvas.addEventListener("pointerdown", (e) => {
     isDragging = true;
+    cropStage?.classList.add("dragging");
     lastX = e.clientX;
     lastY = e.clientY;
     cropCanvas.setPointerCapture(e.pointerId);
@@ -307,12 +363,18 @@ if (cropCanvas) {
     drawCrop();
   });
 
-  cropCanvas.addEventListener("pointerup", () => {
+  const endDrag = (e) => {
     isDragging = false;
-  });
-  cropCanvas.addEventListener("pointercancel", () => {
-    isDragging = false;
-  });
+    cropStage?.classList.remove("dragging");
+    // ✅ QUAN TRỌNG: thả pointer capture để slider kéo được
+    try {
+      cropCanvas.releasePointerCapture(e.pointerId);
+    } catch (_) {}
+  };
+
+  cropCanvas.addEventListener("pointerup", endDrag);
+  cropCanvas.addEventListener("pointercancel", endDrag);
+
 }
 
 // đóng bằng overlay
