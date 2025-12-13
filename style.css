@@ -2312,3 +2312,26 @@ body.crop-open #toolbar{
   background: var(--ios-gray) !important;
   border: none !important;
 }
+
+/* =========================================
+   Show sliders ONLY on mouse / fine pointer
+   ========================================= */
+
+/* Mặc định: HIỆN slider (PC) */
+.crop-controls,
+.crop-pan-y-wrap{
+  display: block;
+}
+
+/* Thiết bị touch (coarse pointer) hoặc không có hover: ẨN slider */
+@media (hover: none), (pointer: coarse), (any-hover: none), (any-pointer: coarse) {
+  .crop-controls,
+  .crop-pan-y-wrap{
+    display: none !important;
+  }
+
+  /* để bố cục không chừa chỗ slider dọc */
+  .crop-stage-wrap{
+    gap: 0 !important;
+  }
+}

@@ -278,6 +278,7 @@ function openCropper(file, block) {
     // ✅ Hiện modal trước để canvas có kích thước thật
     document.body.classList.add("crop-open");
     cropModal.classList.remove("hidden");
+    setCropSlidersVisible(!isCoarseTouchDevice());
     cropCanvas?.parentElement?.classList.remove("dragging");
     // ✅ set chiều dài slider dọc đúng bằng chiều cao vùng crop
     requestAnimationFrame(() => {
@@ -292,6 +293,24 @@ function openCropper(file, block) {
     });
   };
   img.src = url;
+}
+function setCropSlidersVisible(visible) {
+  const el1 = document.querySelector(".crop-controls");
+  const el2 = document.querySelector(".crop-pan-y-wrap");
+  if (el1) el1.style.display = visible ? "" : "none";
+  if (el2) el2.style.display = visible ? "" : "none";
+
+  // nếu ẩn slider dọc thì bỏ gap để không bị lệch bố cục
+  const wrap = document.querySelector(".crop-stage-wrap");
+  if (wrap) wrap.style.gap = visible ? "" : "0px";
+}
+
+function isCoarseTouchDevice() {
+  // matchMedia là cách ổn nhất
+  return (
+    (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) ||
+    (window.matchMedia && window.matchMedia("(hover: none)").matches)
+  );
 }
 
 function closeCropper() {
@@ -527,6 +546,8 @@ if (cropZoom) {
 // kéo ảnh (pan) bằng Pointer Events
 if (cropCanvas) {
   cropCanvas.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse") setCropSlidersVisible(true);
+    if (e.pointerType === "touch") setCropSlidersVisible(false);
     isDragging = true;
     cropStage?.classList.add("dragging");
     lastX = e.clientX;
