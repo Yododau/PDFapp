@@ -278,6 +278,12 @@ function openCropper(file, block) {
     // ✅ Hiện modal trước để canvas có kích thước thật
     document.body.classList.add("crop-open");
     cropModal.classList.remove("hidden");
+    const onFirstPointer = (e) => {
+      if (e.pointerType === "mouse") setCropSlidersVisible(true);
+      if (e.pointerType === "touch") setCropSlidersVisible(false);
+      cropCanvas.removeEventListener("pointerdown", onFirstPointer);
+    };
+    cropCanvas.addEventListener("pointerdown", onFirstPointer, { passive: true });
     setCropSlidersVisible(!isCoarseTouchDevice());
     cropCanvas?.parentElement?.classList.remove("dragging");
     // ✅ set chiều dài slider dọc đúng bằng chiều cao vùng crop
@@ -306,11 +312,12 @@ function setCropSlidersVisible(visible) {
 }
 
 function isCoarseTouchDevice() {
-  // matchMedia là cách ổn nhất
-  return (
-    (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) ||
-    (window.matchMedia && window.matchMedia("(hover: none)").matches)
-  );
+  // Touch-only: có pointer coarse và KHÔNG có pointer fine
+  const coarse = window.matchMedia?.("(any-pointer: coarse)")?.matches ?? false;
+  const fine   = window.matchMedia?.("(any-pointer: fine)")?.matches ?? false;
+
+  // iPhone/iPad thường coarse=true, fine=false
+  return coarse && !fine;
 }
 
 function closeCropper() {
