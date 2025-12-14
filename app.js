@@ -127,16 +127,12 @@ let cropOffsetX = 0;          // pan
 let cropOffsetY = 0;
 let cropMaxPanX = 0;
 let cropMaxPanY = 0;
-// ===== Gesture state =====
-let pointers = new Map();     // pointerId -> {x,y}
-let startDist = 0;           // khoảng cách 2 ngón ban đầu
-let startScale = 1;          // scale tại thời điểm pinch start
-let startCenter = null;      // tâm pinch
-let startOffsetX = 0;
-let startOffsetY = 0;
 
 let isDragging = false;
 let lastX = 0, lastY = 0;
+let pinchStartDist = 0;
+let pinchStartScale = 1;
+let pinchCenterX = 0, pinchCenterY = 0;
 
 if (cropPanY) {
   cropPanY.value = "0";
@@ -184,84 +180,6 @@ function openCropper(file, block) {
 
     // ✅ scale ban đầu = cover
     cropScale = cropMinScale;
-    cropCanvas.addEventListener("pointerdown", (e) => {
-      cropCanvas.setPointerCapture(e.pointerId);
-      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-      // 1 ngón → drag
-      if (pointers.size === 1) {
-        startOffsetX = cropOffsetX;
-        startOffsetY = cropOffsetY;
-      }
-
-      // 2 ngón → pinch start
-      if (pointers.size === 2) {
-        const pts = [...pointers.values()];
-        startDist = distance(pts[0], pts[1]);
-        startScale = cropScale;
-        startCenter = midpoint(pts[0], pts[1]);
-      }
-    });
-    cropCanvas.addEventListener("pointermove", (e) => {
-      if (!pointers.has(e.pointerId)) return;
-
-      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-      // ===== 1 ngón: PAN =====
-      if (pointers.size === 1) {
-        const p = [...pointers.values()][0];
-        const dx = p.x - e.clientX;
-        const dy = p.y - e.clientY;
-
-        cropOffsetX = startOffsetX + dx;
-        cropOffsetY = startOffsetY + dy;
-
-        drawCrop();
-      }
-
-      // ===== 2 ngón: PINCH ZOOM =====
-      if (pointers.size === 2) {
-        const pts = [...pointers.values()];
-        const newDist = distance(pts[0], pts[1]);
-        const scaleFactor = newDist / startDist;
-
-        // scale mới
-        let nextScale = startScale * scaleFactor;
-
-        // clamp scale (cho phép zoom-out < 1 để contain)
-        const minScale = cropMinScale * (contain / cover); // nếu bạn đã có
-        const maxScale = cropMinScale * 3;
-
-        nextScale = Math.max(minScale, Math.min(maxScale, nextScale));
-
-        // giữ tâm pinch
-        const center = midpoint(pts[0], pts[1]);
-        const dx = center.x - startCenter.x;
-        const dy = center.y - startCenter.y;
-
-        cropScale = nextScale;
-        cropOffsetX += dx;
-        cropOffsetY += dy;
-
-        drawCrop();
-      }
-    });
-    function endPointer(e){
-      pointers.delete(e.pointerId);
-      try {
-        cropCanvas.releasePointerCapture(e.pointerId);
-      } catch {}
-
-      // reset khi < 2 ngón
-      if (pointers.size < 2) {
-        startDist = 0;
-        startCenter = null;
-      }
-    }
-
-    cropCanvas.addEventListener("pointerup", endPointer);
-    cropCanvas.addEventListener("pointercancel", endPointer);
-    cropCanvas.addEventListener("pointerleave", endPointer);
 
     // ✅ slider là factor tương đối so với cover
     if (cropZoom) {
@@ -278,13 +196,6 @@ function openCropper(file, block) {
     // ✅ Hiện modal trước để canvas có kích thước thật
     document.body.classList.add("crop-open");
     cropModal.classList.remove("hidden");
-    const onFirstPointer = (e) => {
-      if (e.pointerType === "mouse") setCropSlidersVisible(true);
-      if (e.pointerType === "touch") setCropSlidersVisible(false);
-      cropCanvas.removeEventListener("pointerdown", onFirstPointer);
-    };
-    cropCanvas.addEventListener("pointerdown", onFirstPointer, { passive: true });
-    setCropSlidersVisible(!isCoarseTouchDevice());
     cropCanvas?.parentElement?.classList.remove("dragging");
     // ✅ set chiều dài slider dọc đúng bằng chiều cao vùng crop
     requestAnimationFrame(() => {
@@ -299,25 +210,6 @@ function openCropper(file, block) {
     });
   };
   img.src = url;
-}
-function setCropSlidersVisible(visible) {
-  const el1 = document.querySelector(".crop-controls");
-  const el2 = document.querySelector(".crop-pan-y-wrap");
-  if (el1) el1.style.display = visible ? "" : "none";
-  if (el2) el2.style.display = visible ? "" : "none";
-
-  // nếu ẩn slider dọc thì bỏ gap để không bị lệch bố cục
-  const wrap = document.querySelector(".crop-stage-wrap");
-  if (wrap) wrap.style.gap = visible ? "" : "0px";
-}
-
-function isCoarseTouchDevice() {
-  // Touch-only: có pointer coarse và KHÔNG có pointer fine
-  const coarse = window.matchMedia?.("(any-pointer: coarse)")?.matches ?? false;
-  const fine   = window.matchMedia?.("(any-pointer: fine)")?.matches ?? false;
-
-  // iPhone/iPad thường coarse=true, fine=false
-  return coarse && !fine;
 }
 
 function closeCropper() {
@@ -343,16 +235,6 @@ function resizeCropCanvas() {
   const dpr = window.devicePixelRatio || 1;
   cropCanvas.width  = Math.max(1, Math.round(rect.width  * dpr));
   cropCanvas.height = Math.max(1, Math.round(rect.height * dpr));
-}
-
-function distance(a, b){
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
-function midpoint(a, b){
-  return {
-    x: (a.x + b.x) / 2,
-    y: (a.y + b.y) / 2
-  };
 }
 
 function clampPan() {
@@ -553,8 +435,6 @@ if (cropZoom) {
 // kéo ảnh (pan) bằng Pointer Events
 if (cropCanvas) {
   cropCanvas.addEventListener("pointerdown", (e) => {
-    if (e.pointerType === "mouse") setCropSlidersVisible(true);
-    if (e.pointerType === "touch") setCropSlidersVisible(false);
     isDragging = true;
     cropStage?.classList.add("dragging");
     lastX = e.clientX;
@@ -587,6 +467,119 @@ if (cropCanvas) {
 
   cropCanvas.addEventListener("pointerup", endDrag);
   cropCanvas.addEventListener("pointercancel", endDrag);
+  // ===== iPhone gestures: 1 finger = pan, 2 fingers = pinch zoom =====
+  const getDist = (t1, t2) => {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.hypot(dx, dy);
+  };
+
+  const getCenter = (t1, t2) => ({
+    x: (t1.clientX + t2.clientX) / 2,
+    y: (t1.clientY + t2.clientY) / 2,
+  });
+
+  cropCanvas.addEventListener("touchstart", (e) => {
+    if (!cropImg) return;
+
+    // quan trọng: chặn Safari zoom/scroll trang
+    e.preventDefault();
+    e.stopPropagation();
+
+    const dpr = window.devicePixelRatio || 1;
+
+    if (e.touches.length === 1) {
+      // 1 ngón -> pan
+      touchMode = "pan";
+      isDragging = false; // tắt pointer-drag nếu đang dính
+      lastTouchX = e.touches[0].clientX;
+      lastTouchY = e.touches[0].clientY;
+      cropStage?.classList.add("dragging");
+    } else if (e.touches.length === 2) {
+      // 2 ngón -> pinch
+      touchMode = "pinch";
+      isDragging = false;
+
+      pinchStartDist = getDist(e.touches[0], e.touches[1]);
+      pinchStartScale = cropScale;
+
+      const c = getCenter(e.touches[0], e.touches[1]);
+      pinchCenterX = c.x;
+      pinchCenterY = c.y;
+
+      cropStage?.classList.add("dragging");
+    }
+  }, { passive: false });
+
+  cropCanvas.addEventListener("touchmove", (e) => {
+    if (!cropImg) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const dpr = window.devicePixelRatio || 1;
+
+    // 1 ngón: pan
+    if (touchMode === "pan" && e.touches.length === 1) {
+      const t = e.touches[0];
+      const dx = (t.clientX - lastTouchX) * dpr;
+      const dy = (t.clientY - lastTouchY) * dpr;
+
+      lastTouchX = t.clientX;
+      lastTouchY = t.clientY;
+
+      cropOffsetX += dx;
+      cropOffsetY += dy;
+
+      drawCrop();
+      return;
+    }
+
+    // 2 ngón: pinch zoom
+    if (touchMode === "pinch" && e.touches.length === 2) {
+      const dist = getDist(e.touches[0], e.touches[1]);
+      if (pinchStartDist <= 0) return;
+
+      // tỉ lệ zoom so với lúc bắt đầu pinch
+      const ratio = dist / pinchStartDist;
+
+      // scale mới
+      let newScale = pinchStartScale * ratio;
+
+      // clamp theo giới hạn bạn đang dùng
+      // (cropMinScale là "cover baseline" của bạn)
+      const minS = cropMinScale * (parseFloat(cropZoom?.min || "1") || 1);
+      const maxS = cropMinScale * (parseFloat(cropZoom?.max || "3") || 3);
+      newScale = Math.max(minS, Math.min(maxS, newScale));
+
+      cropScale = newScale;
+
+      // sync slider zoom (value là factor so với cropMinScale)
+      if (cropZoom) {
+        cropZoom.value = String(cropScale / cropMinScale);
+        updateRangeFill(cropZoom);
+      }
+
+      drawCrop();
+      return;
+    }
+  }, { passive: false });
+
+  cropCanvas.addEventListener("touchend", (e) => {
+    // nếu còn 1 ngón sau khi nhấc 1 ngón từ pinch -> chuyển qua pan mượt
+    if (e.touches.length === 1) {
+      touchMode = "pan";
+      lastTouchX = e.touches[0].clientX;
+      lastTouchY = e.touches[0].clientY;
+      return;
+    }
+
+    // hết touch
+    if (e.touches.length === 0) {
+      touchMode = "";
+      cropStage?.classList.remove("dragging");
+    }
+  });
 
 }
 

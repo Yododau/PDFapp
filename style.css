@@ -1720,11 +1720,10 @@ body.pdf-mode #a4-wrapper {
 }
 
 #crop-canvas{
-  touch-action: none;
   width: 100%;
   height: 100%;
   display: block;
-  touch-action: pan-x pan-y; /* ✅ cho phép kéo ảnh, nhưng không chặn slider */
+  touch-action: none;
 }
 
 .crop-frame{
@@ -2311,27 +2310,4 @@ body.crop-open #toolbar{
 #crop-pan-y::-moz-range-thumb{
   background: var(--ios-gray) !important;
   border: none !important;
-}
-
-/* =========================================
-   Show sliders ONLY on mouse / fine pointer
-   ========================================= */
-
-/* Mặc định: HIỆN slider (PC) */
-.crop-controls,
-.crop-pan-y-wrap{
-  display: block;
-}
-
-/* Thiết bị touch (coarse pointer) hoặc không có hover: ẨN slider */
-@media (hover: none), (pointer: coarse), (any-hover: none), (any-pointer: coarse) {
-  .crop-controls,
-  .crop-pan-y-wrap{
-    display: none !important;
-  }
-
-  /* để bố cục không chừa chỗ slider dọc */
-  .crop-stage-wrap{
-    gap: 0 !important;
-  }
 }
