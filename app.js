@@ -540,21 +540,56 @@ if (cropCanvas) {
       const dist = getDist(e.touches[0], e.touches[1]);
       if (pinchStartDist <= 0) return;
 
-      // tỉ lệ zoom so với lúc bắt đầu pinch
+      // 1) Tính newScale (giống bạn đang làm)
       const ratio = dist / pinchStartDist;
 
-      // scale mới
+      const oldScale = cropScale;
+
       let newScale = pinchStartScale * ratio;
 
-      // clamp theo giới hạn bạn đang dùng
-      // (cropMinScale là "cover baseline" của bạn)
+      // clamp theo giới hạn slider của bạn
       const minS = cropMinScale * (parseFloat(cropZoom?.min || "1") || 1);
       const maxS = cropMinScale * (parseFloat(cropZoom?.max || "3") || 3);
       newScale = Math.max(minS, Math.min(maxS, newScale));
 
+      // 2) Tính tâm pinch trong tọa độ CANVAS pixel (quan trọng)
+      const rect = cropCanvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      const centerClient = getCenter(e.touches[0], e.touches[1]);
+      const cx = (centerClient.x - rect.left) * dpr;
+      const cy = (centerClient.y - rect.top) * dpr;
+
+      // 3) Tính vị trí ảnh đang vẽ (theo đúng công thức drawCrop của bạn)
+      const cw = cropCanvas.width;
+      const ch = cropCanvas.height;
+      const imgW = cropImg.naturalWidth;
+      const imgH = cropImg.naturalHeight;
+
+      const oldDrawW = imgW * oldScale;
+      const oldDrawH = imgH * oldScale;
+
+      const oldX = (cw - oldDrawW) / 2 + cropOffsetX;
+      const oldY = (ch - oldDrawH) / 2 + cropOffsetY;
+
+      // 4) Lấy "điểm ảnh" (u,v) đang nằm dưới tâm pinch (trong tọa độ ảnh gốc)
+      const u = (cx - oldX) / oldScale;
+      const v = (cy - oldY) / oldScale;
+
+      // 5) Set scale mới
       cropScale = newScale;
 
-      // sync slider zoom (value là factor so với cropMinScale)
+      // 6) Tính lại offset để điểm (u,v) vẫn nằm đúng dưới (cx,cy)
+      const newDrawW = imgW * cropScale;
+      const newDrawH = imgH * cropScale;
+
+      const newX = cx - u * cropScale;
+      const newY = cy - v * cropScale;
+
+      cropOffsetX = newX - (cw - newDrawW) / 2;
+      cropOffsetY = newY - (ch - newDrawH) / 2;
+
+      // 7) Sync slider zoom (value là factor so với cropMinScale)
       if (cropZoom) {
         cropZoom.value = String(cropScale / cropMinScale);
         updateRangeFill(cropZoom);
@@ -563,6 +598,7 @@ if (cropCanvas) {
       drawCrop();
       return;
     }
+
   }, { passive: false });
 
   cropCanvas.addEventListener("touchend", (e) => {

@@ -2289,7 +2289,7 @@ body.crop-open #toolbar{
 
 /* iOS system gray */
 :root{
-  --ios-gray: #4e4e4ec0; /* iPhone-like gray */
+  --ios-gray: #585858; /* iPhone-like gray */
 }
 
 /* áp dụng cho cả 2 slider */
@@ -2310,4 +2310,22 @@ body.crop-open #toolbar{
 #crop-pan-y::-moz-range-thumb{
   background: var(--ios-gray) !important;
   border: none !important;
+}
+
+/* ===== Crop UI override: hide vertical slider + make layout full width ===== */
+.crop-pan-y-wrap{
+  display: none !important;   /* ẩn slider dọc */
+}
+
+/* bỏ khoảng trống do layout flex để slider dọc */
+.crop-stage-wrap{
+  gap: 0 !important;
+}
+
+/* slider ngang chiếm full bề ngang modal */
+.crop-controls{
+  width: 100% !important;
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box;
 }
